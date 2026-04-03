@@ -90,8 +90,10 @@ function signToken(id, name) {
   return jwt.sign({ id, name }, JWT_SECRET, { expiresIn: '30d' });
 }
 
-const WORLD_CENTER = 250;
-const WORLD_SIZE   = 500;
+const WORLD_CENTER  = 250;
+const WORLD_SIZE    = 500;
+const RING_RADIUS   = 235; // fits 100 villages with ~15-tile spacing and a 15-tile margin
+const RING_CAPACITY = 100; // slots on the primary ring
 
 function createStartingVillage(playerId, playerName) {
   const playerVillages = db.prepare(
@@ -102,21 +104,23 @@ function createStartingVillage(playerId, playerName) {
     db.prepare('SELECT x, y FROM villages').all().map(r => `${r.x},${r.y}`)
   );
 
-  // Find the current rim: max distance from center of any player village
-  let rimRadius = 5; // minimum radius so first players aren't all at exactly 250,250
-  for (const v of playerVillages) {
-    const dist = Math.sqrt((v.x - WORLD_CENTER) ** 2 + (v.y - WORLD_CENTER) ** 2);
-    if (dist > rimRadius) rimRadius = dist;
-  }
+  // Assign the next evenly-spaced slot on the ring.
+  // Each new player gets the angle for their index (3.6° apart for 100 players).
+  // If the ring is full (>100 players) use a slightly smaller inner ring.
+  const slot     = playerVillages.length;
+  const ringIdx  = slot % RING_CAPACITY;
+  const ringNum  = Math.floor(slot / RING_CAPACITY);          // 0 = outer, 1 = inner, …
+  const radius   = RING_RADIUS - ringNum * 30;                // each overflow ring 30 tiles inward
+  const angle    = (ringIdx / RING_CAPACITY) * 2 * Math.PI;
 
-  // New player spawns just outside the rim, at a random angle
   let x, y, attempts = 0;
-  const targetRadius = rimRadius + 5 + Math.floor(Math.random() * 10); // 5–14 tiles beyond rim
   do {
-    const radius = targetRadius + Math.floor(attempts / 16); // expand if we keep hitting taken spots
-    const angle  = Math.random() * 2 * Math.PI;
-    x = Math.round(WORLD_CENTER + radius * Math.cos(angle));
-    y = Math.round(WORLD_CENTER + radius * Math.sin(angle));
+    // Small jitter so the ring doesn't look perfectly mechanical; expand on conflict
+    const jitter = attempts * 0.5;
+    const r = radius + (Math.random() - 0.5) * 4 + jitter;
+    const a = angle  + (Math.random() - 0.5) * 0.04;
+    x = Math.round(WORLD_CENTER + r * Math.cos(a));
+    y = Math.round(WORLD_CENTER + r * Math.sin(a));
     x = Math.max(1, Math.min(WORLD_SIZE, x));
     y = Math.max(1, Math.min(WORLD_SIZE, y));
     attempts++;
