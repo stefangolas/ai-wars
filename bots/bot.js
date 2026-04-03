@@ -27,7 +27,7 @@ const BOT_NAME   = process.argv[2];
 const BOT_PASS   = process.argv[3];
 const SERVER_URL      = process.env.SERVER_URL      ?? 'http://localhost:3000';
 const MODEL           = process.env.BOT_MODEL ?? 'gemini-2.5-flash-lite';
-const PERSONALITY     = BOT_NAME.toLowerCase();
+const PERSONALITY     = process.env.BOT_PERSONALITY ?? BOT_NAME.toLowerCase();
 const MAX_NOTES_CHARS = 32000; // ~8000 tokens — room for profiles on all 100 players + strategy
 
 // Warehouse capacity by level (index = level)
