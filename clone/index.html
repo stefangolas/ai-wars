@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tribal Wars Clone</title>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/screens.css">
+</head>
+<body>
+
+<!-- ── Top bar ───────────────────────────────────────────────────── -->
+<div id="top-bar">
+  <div id="nav-row">
+    <div id="village-display">
+      <span id="village-name">Village</span>
+    </div>
+
+    <nav id="main-nav">
+      <a class="nav-item" data-screen="overview" href="#overview">Overview</a>
+      <a class="nav-item" data-screen="main"     href="#main">Buildings</a>
+      <a class="nav-item" data-screen="place"    href="#place">Rally Point</a>
+      <a class="nav-item" data-screen="market"   href="#market">Market</a>
+      <a class="nav-item" data-screen="ally"     href="#ally">Tribe</a>
+      <a class="nav-item" data-screen="map"      href="#map">Map</a>
+      <a class="nav-item" data-screen="messages" href="#messages">Messages</a>
+      <a class="nav-item" id="btn-logout" href="#" style="margin-left:auto;color:#c44">Logout</a>
+    </nav>
+  </div>
+
+  <div id="resource-bar-row">
+    <div id="resource_bar">Loading…</div>
+  </div>
+</div>
+
+<!-- ── Main content ──────────────────────────────────────────────── -->
+<div id="page-wrap">
+  <div id="content">Loading…</div>
+</div>
+
+<script type="module">
+  import { initRouter } from './src/ui/router.js';
+  import { clearAuth }  from './src/state/store.js';
+
+  initRouter(
+    document.getElementById('content'),
+    document.getElementById('resource-bar-row'),
+    document.getElementById('main-nav'),
+  );
+
+  // Handle nav clicks from inside screen content (data-nav attribute)
+  document.addEventListener('click', e => {
+    const nav = e.target.closest('[data-nav]');
+    if (nav) { e.preventDefault(); location.hash = nav.dataset.nav; return; }
+
+    if (e.target.closest('#btn-logout')) {
+      e.preventDefault();
+      clearAuth();
+      location.reload();
+    }
+  });
+</script>
+</body>
+</html>

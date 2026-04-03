@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Bot runtime state (generated per-session)
+bots/notes/
+
+# Copyrighted game assets — replace with originals before use
+# See clone/ASSETS.md for the full replacement tracker
+clone/assets/
+
+# Local tool config
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

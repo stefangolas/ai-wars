@@ -1,0 +1,91 @@
+/* Base styles: CSS variables, reset, typography */
+
+:root {
+  /* Tribal Wars colour palette */
+  --color-bg:           #3d2b1a;
+  --color-bg-body:      #2b1d0e;
+  --color-parchment:    #f4e8c4;
+  --color-parchment-alt:#ede0b0;
+  --color-border:       #c1a264;
+  --color-border-dark:  #8b6914;
+  --color-header-bg:    #c1a264;
+  --color-header-text:  #3d2000;
+  --color-text:         #4a3520;
+  --color-text-muted:   #8b7355;
+  --color-link:         #6b3a00;
+  --color-link-hover:   #c05000;
+  --color-warn:         #cc0000;
+  --color-success:      #2a7a00;
+  --color-inactive:     #999;
+
+  /* Button colours */
+  --btn-bg:             linear-gradient(to bottom, #d4a855, #a07020);
+  --btn-bg-hover:       linear-gradient(to bottom, #e0b870, #b08030);
+  --btn-border:         #7a5500;
+  --btn-text:           #3d2000;
+
+  /* Spacing */
+  --gap-sm:  4px;
+  --gap-md:  8px;
+  --gap-lg:  16px;
+
+  /* Font */
+  --font-main: 'Segoe UI', Verdana, Arial, sans-serif;
+  --font-size: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg-body);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: var(--font-size);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover { color: var(--color-link-hover); text-decoration: underline; }
+
+h2, h3, h4 {
+  margin: var(--gap-md) 0 var(--gap-sm);
+  color: var(--color-header-text);
+  font-weight: bold;
+}
+h3 { font-size: 14px; }
+h4 { font-size: 13px; border-bottom: 1px solid var(--color-border); padding-bottom: 2px; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--gap-lg) 0;
+}
+
+p { margin: var(--gap-sm) 0; }
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  background: #fff8ee;
+  border: 1px solid var(--color-border-dark);
+  color: var(--color-text);
+  padding: 2px 4px;
+  font-family: var(--font-main);
+  font-size: var(--font-size);
+  border-radius: 2px;
+}
+input:focus, textarea:focus, select:focus {
+  outline: 1px solid var(--color-border);
+}
+
+.inactive, .inactive * { color: var(--color-inactive); }
+.warn { color: var(--color-warn); font-weight: bold; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.section-title { margin-top: var(--gap-lg); }
+.not-built-msg { padding: var(--gap-lg); }

@@ -1,0 +1,12 @@
+{
+  "name": "tribal-wars-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Claude-powered bot for Tribal Wars clone",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "openai": "^6.33.0"
+  }
+}

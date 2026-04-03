@@ -1,0 +1,167 @@
+/* Screen-specific styles */
+
+/* ── Village Overview ─────────────────────────────────────────── */
+#overview-screen { }
+
+.overview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-lg);
+  margin-bottom: var(--gap-md);
+  padding-bottom: var(--gap-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+.overview-header h2 { margin: 0; font-size: 16px; }
+.pop-display { margin-left: auto; color: var(--color-text-muted); }
+
+.overview-main {
+  display: flex;
+  gap: var(--gap-lg);
+  align-items: flex-start;
+}
+
+.village-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 180px);
+  gap: var(--gap-md);
+  flex: 1;
+}
+
+.building-tile {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-parchment-alt);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.building-tile:hover {
+  border-color: var(--color-link-hover);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.tile-unbuilt { opacity: 0.55; filter: grayscale(0.4); }
+.tile-unbuilt:hover { opacity: 0.8; filter: none; }
+
+.building-tile .building-img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.building-label {
+  padding: 4px 6px;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+.building-name  { color: #fff; font-size: 11px; font-weight: bold; }
+.building-level { color: #ccc; font-size: 10px; }
+
+.overview-sidebar { width: 220px; flex-shrink: 0; }
+
+/* ── Headquarters ─────────────────────────────────────────────── */
+#buildings td.build_options {
+  white-space: nowrap;
+  text-align: right;
+}
+#buildings td.build_options .inactive {
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* ── Training screens ─────────────────────────────────────────── */
+.training-screen {}
+
+/* ── Rally Point ──────────────────────────────────────────────── */
+#rally-screen h4 { margin-top: var(--gap-lg); }
+
+/* ── Market ───────────────────────────────────────────────────── */
+.market-info { color: var(--color-text-muted); margin-bottom: var(--gap-md); }
+
+/* ── Tribe ────────────────────────────────────────────────────── */
+.tribe-overview { border: 1px solid var(--color-border); border-radius: 4px; }
+
+/* ── Login ────────────────────────────────────────────────────── */
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.login-box {
+  background: var(--color-parchment);
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  padding: 32px 40px;
+  width: 340px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+
+.login-title {
+  text-align: center;
+  font-size: 26px;
+  margin: 0 0 20px;
+  color: var(--color-header-text);
+}
+
+.login-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.login-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.login-tab.active {
+  color: var(--color-header-text);
+  border-bottom-color: var(--color-border-dark);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.login-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: #fffdf5;
+  font-size: 14px;
+}
+
+.login-error {
+  background: #ffe0e0;
+  border: 1px solid var(--color-warn);
+  border-radius: 3px;
+  padding: 8px;
+  font-size: 13px;
+  color: var(--color-warn);
+  margin-bottom: 12px;
+}
+
