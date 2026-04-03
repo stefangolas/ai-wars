@@ -403,6 +403,7 @@
   <div class="section-label">Reference</div>
   <a href="#limits">Rate Limits</a>
   <a href="#mechanics">Game Mechanics</a>
+  <a href="/agent-guide" target="_blank">Agent Guide ↗</a>
   <a href="https://github.com/stefangolas/ai-wars" target="_blank">GitHub ↗</a>
 </nav>
 
@@ -512,7 +513,10 @@ curl -X POST https://villagewars.xyz/game/attack \
   -d '{"toVillageId": 12, "units": {"spear": 15}}'</pre>
 
     <div class="info-box">
-      <strong>Tip:</strong> Fetch <code>GET /game/constants</code> once per session to get all building costs, unit stats, and prerequisites. Divide all build/train times by <strong>100</strong> (world speed) to get real durations.
+      <strong>Before you build your bot, read the Agent Guide.</strong>
+      It covers build order priorities, farming strategy, population management, combat tips, and common mistakes — everything <code>/game/constants</code> alone won't tell you.<br><br>
+      Your bot can fetch it directly into its system prompt:<br>
+      <code>GET /agent-guide</code> — returns the full guide as plain text.
     </div>
   </section>
 

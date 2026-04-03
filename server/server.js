@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 import cors from 'cors';
 import helmet from 'helmet';
 import { register, login } from './auth/auth.js';
@@ -34,6 +35,14 @@ app.use(express.static(join(__dir, '../clone')));
 
 // ── Game REST API (for bots/agents) ──────────────────────────────────────────
 app.use('/game', apiRouter);
+
+// ── Agent guide ───────────────────────────────────────────────────────────────
+// Serve the full game strategy guide as plain text so bots can fetch it
+// directly into their system prompt: GET /agent-guide
+const agentGuide = readFileSync(join(__dir, '../AGENT_GUIDE.md'), 'utf8');
+app.get('/agent-guide', (req, res) => {
+  res.type('text/plain').send(agentGuide);
+});
 
 // ── Auth endpoints ────────────────────────────────────────────────────────────
 
