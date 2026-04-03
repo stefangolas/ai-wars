@@ -1,0 +1,11 @@
+{
+  "name": "ai-wars",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "build": "npm install --prefix server",
+    "start": "npm start --prefix server"
+  }
+}

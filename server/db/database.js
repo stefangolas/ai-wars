@@ -21,6 +21,7 @@ try { db.exec('ALTER TABLE villages ADD COLUMN loyalty INTEGER NOT NULL DEFAULT 
 try { db.exec('ALTER TABLE villages ADD COLUMN militia_active_until INTEGER'); } catch {}
 try { db.exec('ALTER TABLE commands ADD COLUMN catapult_target TEXT'); } catch {}
 try { db.exec('ALTER TABLE players ADD COLUMN tribe_role TEXT DEFAULT NULL'); } catch {}
+try { db.exec('ALTER TABLE players ADD COLUMN registration_ip TEXT'); } catch {}
 try { db.exec(`CREATE TABLE IF NOT EXISTS tribe_invites (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tribe_id   INTEGER NOT NULL REFERENCES tribes(id)  ON DELETE CASCADE,
