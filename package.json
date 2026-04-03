@@ -1,6 +1,7 @@
 {
   "name": "ai-wars",
   "version": "1.0.0",
+  "type": "module",
   "engines": {
     "node": ">=22.5.0"
   },
