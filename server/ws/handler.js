@@ -19,6 +19,11 @@ export function initWss(server) {
     // Expect first message to be { type: 'AUTH', token }
     let playerId = null;
 
+    // Close unauthenticated connections after 10 seconds
+    const authTimeout = setTimeout(() => {
+      if (!playerId) ws.terminate();
+    }, 10_000);
+
     ws.on('message', raw => {
       let msg;
       try { msg = JSON.parse(raw); } catch { return ws.send(err('Invalid JSON')); }
@@ -30,6 +35,7 @@ export function initWss(server) {
         if (!payload) return ws.send(err('Invalid token'));
 
         playerId = payload.id;
+        clearTimeout(authTimeout);
         if (!connections.has(playerId)) connections.set(playerId, new Set());
         connections.get(playerId).add(ws);
 

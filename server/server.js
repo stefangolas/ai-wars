@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import helmet from 'helmet';
 import { register, login } from './auth/auth.js';
 import { initWss } from './ws/handler.js';
 import { seedWorld } from './game/worldgen.js';
@@ -20,8 +21,9 @@ const server = createServer(app);
 // when running behind nginx, Caddy, or Cloudflare.
 app.set('trust proxy', 1);
 
+app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled — frontend has no nonce setup yet
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // 10 auth attempts per IP per 15 minutes — covers both register and login.
 const authLimiter = new RateLimiter(10, 15 * 60 * 1000);
