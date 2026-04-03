@@ -12,10 +12,24 @@ const wsLimiter = new RateLimiter(30, 10_000);
 // playerId → Set<WebSocket>
 const connections = new Map();
 
+// ip → connection count — prevents unauthenticated WS floods
+const connsByIp = new Map();
+const MAX_CONNS_PER_IP = 5;
+
 export function initWss(server) {
   const wss = new WebSocketServer({ server });
 
   wss.on('connection', (ws, req) => {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() ?? req.socket.remoteAddress;
+
+    // Reject if this IP already has too many open connections
+    const ipCount = connsByIp.get(ip) ?? 0;
+    if (ipCount >= MAX_CONNS_PER_IP) {
+      ws.terminate();
+      return;
+    }
+    connsByIp.set(ip, ipCount + 1);
+
     // Expect first message to be { type: 'AUTH', token }
     let playerId = null;
 
@@ -66,6 +80,10 @@ export function initWss(server) {
     });
 
     ws.on('close', () => {
+      const c = connsByIp.get(ip) ?? 1;
+      if (c <= 1) connsByIp.delete(ip);
+      else connsByIp.set(ip, c - 1);
+
       if (playerId) {
         const set = connections.get(playerId);
         if (set) {

@@ -15,6 +15,10 @@ import { WORLD_SPEED } from '../config.js';
 // tight enough to prevent runaway loops from hammering the DB.
 const apiLimiter = new RateLimiter(30, 10_000);
 
+// Public endpoints (no auth) — rate limited by IP to handle traffic spikes.
+// 60 requests per minute is plenty for a browser polling every 30 seconds.
+const publicLimiter = new RateLimiter(60, 60_000);
+
 const router = express.Router();
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
@@ -48,14 +52,21 @@ function act(actionName, getParams) {
 
 // ── Public endpoints (no auth) ────────────────────────────────────────────────
 
+function limitPublic(req, res, next) {
+  if (!publicLimiter.allow(req.ip)) {
+    return res.status(429).json({ ok: false, error: 'Too many requests' });
+  }
+  next();
+}
+
 // Static game data — all building and unit definitions.
 // Agents should fetch this once per session to understand costs, times, and stats.
-router.get('/constants', (req, res) => {
+router.get('/constants', limitPublic, (req, res) => {
   res.json({ ok: true, buildings: BUILDINGS, units: UNITS });
 });
 
 // World settings — speed, map size, tick rate.
-router.get('/world', (req, res) => {
+router.get('/world', limitPublic, (req, res) => {
   res.json({
     ok: true,
     worldSpeed:  WORLD_SPEED,
@@ -67,7 +78,7 @@ router.get('/world', (req, res) => {
 });
 
 // All villages (public info only) — for the map visualisation.
-router.get('/worldmap', (req, res) => {
+router.get('/worldmap', limitPublic, (req, res) => {
   try {
     const villages = db.prepare(`
       SELECT v.id, v.name, v.x, v.y, v.points, v.is_npc,
@@ -86,7 +97,7 @@ router.get('/worldmap', (req, res) => {
 });
 
 // Top 50 rankings — public so the spectator page can show them without auth.
-router.get('/leaderboard', (req, res) => {
+router.get('/leaderboard', limitPublic, (req, res) => {
   try {
     const rows = db.prepare(`
       SELECT v.id, v.name AS village_name, v.points,
