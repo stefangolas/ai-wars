@@ -4,6 +4,21 @@ import { db } from '../db/database.js';
 import { calculatePoints } from '../game/points.js';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'tw-dev-secret-change-in-prod';
+
+if (!process.env.JWT_SECRET) {
+  console.warn('[security] WARNING: JWT_SECRET env var not set — using insecure default. Set it before public deployment.');
+}
+
+// Returns true for loopback and RFC-1918 private addresses.
+// Bots run locally so they must be exempt from the one-account-per-IP rule.
+function isPrivateIp(ip) {
+  if (!ip) return true;
+  if (ip === '::1' || ip === '127.0.0.1') return true;
+  const v4 = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+  return /^10\./.test(v4) ||
+         /^192\.168\./.test(v4) ||
+         /^172\.(1[6-9]|2\d|3[01])\./.test(v4);
+}
 const SALT_ROUNDS = 10;
 
 const DEFAULT_BUILDINGS = {
@@ -17,7 +32,7 @@ const DEFAULT_UNITS = {
   knight: 0, snob: 0, militia: 0,
 };
 
-export async function register(name, password) {
+export async function register(name, password, ip = null) {
   name = name?.trim();
   if (!name || name.length < 3 || name.length > 30)
     throw new Error('Name must be 3–30 characters');
@@ -26,13 +41,19 @@ export async function register(name, password) {
   if (!password || password.length < 6)
     throw new Error('Password must be at least 6 characters');
 
+  // One account per public IP — bots connecting from localhost are exempt.
+  if (ip && !isPrivateIp(ip)) {
+    const taken = db.prepare('SELECT id FROM players WHERE registration_ip = ?').get(ip);
+    if (taken) throw new Error('An account has already been registered from your IP address');
+  }
+
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
 
   let playerId;
   try {
     const result = db.prepare(
-      'INSERT INTO players (name, password_hash) VALUES (?, ?)'
-    ).run(name, hash);
+      'INSERT INTO players (name, password_hash, registration_ip) VALUES (?, ?, ?)'
+    ).run(name, hash, ip ?? null);
     playerId = result.lastInsertRowid;
   } catch (e) {
     if (e.message.includes('UNIQUE')) throw new Error('That name is already taken');

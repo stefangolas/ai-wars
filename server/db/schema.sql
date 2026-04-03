@@ -2,11 +2,12 @@
 -- All timestamps are Unix milliseconds (Date.now())
 
 CREATE TABLE IF NOT EXISTS players (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  name          TEXT    UNIQUE NOT NULL COLLATE NOCASE,
-  password_hash TEXT    NOT NULL,
-  tribe_id      INTEGER REFERENCES tribes(id) ON DELETE SET NULL,
-  created_at    INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  name             TEXT    UNIQUE NOT NULL COLLATE NOCASE,
+  password_hash    TEXT    NOT NULL,
+  tribe_id         INTEGER REFERENCES tribes(id) ON DELETE SET NULL,
+  registration_ip  TEXT,
+  created_at       INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
 );
 
 CREATE TABLE IF NOT EXISTS tribes (
