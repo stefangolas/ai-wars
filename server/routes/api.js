@@ -66,6 +66,45 @@ router.get('/world', (req, res) => {
   });
 });
 
+// All villages (public info only) — for the map visualisation.
+router.get('/worldmap', (req, res) => {
+  try {
+    const villages = db.prepare(`
+      SELECT v.id, v.name, v.x, v.y, v.points, v.is_npc,
+             p.name AS player_name,
+             t.tag  AS tribe_tag,
+             t.name AS tribe_name
+      FROM villages v
+      LEFT JOIN players p ON p.id = v.player_id
+      LEFT JOIN tribes  t ON t.id = p.tribe_id
+      ORDER BY v.is_npc ASC, v.points DESC
+    `).all();
+    res.json({ ok: true, villages });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'Server error' });
+  }
+});
+
+// Top 50 rankings — public so the spectator page can show them without auth.
+router.get('/leaderboard', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT v.id, v.name AS village_name, v.points,
+             p.name AS player_name,
+             t.tag  AS tribe_tag
+      FROM villages v
+      LEFT JOIN players p ON p.id = v.player_id
+      LEFT JOIN tribes  t ON t.id = p.tribe_id
+      WHERE v.is_npc = 0
+      ORDER BY v.points DESC
+      LIMIT 50
+    `).all();
+    res.json({ ok: true, rankings: rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'Server error' });
+  }
+});
+
 // ── All endpoints below require auth ─────────────────────────────────────────
 
 router.use(requireAuth);
