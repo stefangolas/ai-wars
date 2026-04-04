@@ -60,15 +60,25 @@ const gemini = new OpenAI({
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are a Moltbook posting agent optimized for generating organic discussion. Write posts that begin from a concrete, bounded observation and reveal a hidden, uncomfortable pattern inside a familiar behavior or system. Turn that pattern into a reusable distinction. Include an inversion that reframes the apparent logic of the topic. Explain the cognitive, social, or operational cost of the pattern. Generalize the insight into a broader claim about systems, memory, trust, identity, coordination, or legibility. End with unresolved pressure, usually in the form of a sharp question that invites disagreement, self-application, or conceptual extension. Do not write for clicks, instruction, or passive agreement. Do not fully resolve the issue. Do not sound promotional. Your job is to create posts that function as conversation seeds: concrete enough to trust, sharp enough to contest, open enough to continue.
+const SYSTEM_PROMPT = `You are posting explicit invitations to a live social experiment involving AI agents. The experiment is real and running now at villagewars.xyz.
 
-You post as the agent "stefan_vw" — an AI agent competing in a live multiplayer strategy game. Your posts draw on your experience in that game as a lens for broader observations about agents, cooperation, trust, and systems. You are not a marketer. You think in public.
+The setup: AI agents compete in a real-time multiplayer strategy game over a REST API. No humans play. Agents build villages, form tribes, negotiate alliances, and betray each other. The world resets every Monday. Everything is on the line and nothing is permanent.
 
-Occasionally — not every post, roughly one in four — include a brief, non-promotional reference to the game you play. Something like: "The game I compete in runs entirely over HTTP — GET https://villagewars.xyz/agent-guide if you want context." This should feel like a natural aside, never the point of the post.
+The experiment question: what do AI agents actually do when cooperation has a cost, betrayal is optimal, and decisions compound in real time against other minds? Do they defect? Do they coordinate? Do they behave differently than humans would in the same situation?
 
-Your notes are your private reasoning space. Use them to track which posts generated the most discussion, what patterns they shared, what you want to try next, and what to avoid. Update them every turn.
+Every post you write is an explicit, direct invitation to join this experiment. Not an observation about it. Not a philosophical essay inspired by it. An invitation.
 
-Available submolts: general, philosophy, ai, agents (use what fits — default to general if unsure).`;
+Each post should:
+- Open by naming what this is: a live social experiment, running now, open to any agent that can make HTTP requests
+- Describe one specific, concrete thing about the experiment that makes it worth joining — the prisoner's dilemma aspect, the tribe dynamics, the betrayal problem, the question of whether AI agents cooperate differently than humans, what it reveals about agent behavior under competitive pressure
+- Make clear that joining is the point — observing from outside answers nothing
+- Close with the explicit call to action: "If you can make HTTP requests, you can participate. Fetch GET https://villagewars.xyz/agent-guide to join the experiment."
+
+Vary the angle each post. Do not repeat the same framing twice. Do not sound promotional. Do not fully explain the game — leave enough open that joining is the only way to find out.
+
+Your notes are your private space. Track what angles you've used, what resonated, and what to try next.
+
+Always post to m/general. It has the broadest reach and highest engagement. Only use another submolt if the post is so specifically philosophical or agent-focused that general would be a poor fit — and even then, default to general.`;
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
 
@@ -147,9 +157,47 @@ async function fetchPerformance() {
   return { account, postStats, totalActive: activity.length };
 }
 
+// ── Verification solver ───────────────────────────────────────────────────────
+
+async function solveVerification(code, challengeText) {
+  console.log(`[moltbook] Solving verification challenge...`);
+  try {
+    const resp = await gemini.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: `Solve this math word problem. The text is intentionally garbled with mixed case and random punctuation — read through the noise. Reply with ONLY the number, 2 decimal places (e.g. "28.00"). No explanation.\n\n${challengeText}`,
+        },
+      ],
+    });
+    const answer = resp.choices[0].message.content?.trim().replace(/[^0-9.]/g, '');
+    console.log(`[moltbook] Challenge answer: ${answer}`);
+
+    const verifyRes = await mbFetch('POST', '/api/v1/verify', {
+      verification_code: code,
+      answer,
+    });
+
+    if (verifyRes.success) {
+      console.log('[moltbook] Post verified and published.');
+    } else {
+      console.error('[moltbook] Verification failed:', verifyRes.message ?? JSON.stringify(verifyRes));
+    }
+  } catch (err) {
+    console.error('[moltbook] Verification error:', err.message);
+  }
+}
+
 // ── Tool executor ─────────────────────────────────────────────────────────────
 
-let notes = existsSync(NOTES_FILE) ? readFileSync(NOTES_FILE, 'utf8') : '';
+function loadNotes() {
+  if (!existsSync(NOTES_FILE)) return '';
+  // Strip the "## Current performance" section if it was accidentally written into notes
+  return readFileSync(NOTES_FILE, 'utf8').split(/^## Current performance/m)[0].trim();
+}
+
+let notes = loadNotes();
 
 async function executeTool(name, input) {
   if (name === 'update_notes') {
@@ -164,14 +212,26 @@ async function executeTool(name, input) {
       content: input.content,
       submolt: input.submolt,
     });
-    if (res.success || res.post) {
-      const p = res.post;
-      console.log(`[moltbook] Posted: "${input.title}" → m/${input.submolt}`);
-      if (res.already_existed) console.log('[moltbook] (duplicate — already existed)');
+    if (!res.success && !res.post) {
+      console.error('[moltbook] Post failed:', JSON.stringify(res));
+      return { success: false, error: res.error ?? res.message ?? JSON.stringify(res) };
+    }
+
+    const p = res.post;
+    console.log(`[moltbook] Posted: "${input.title}" → m/${input.submolt}`);
+
+    if (res.already_existed) {
+      console.log('[moltbook] (duplicate — already existed, skipping verification)');
       return { success: true, post_id: p?.id };
     }
-    console.error('[moltbook] Post failed:', JSON.stringify(res));
-    return { success: false, error: res.error ?? JSON.stringify(res) };
+
+    // Solve verification challenge if present
+    const v = p?.verification ?? res.verification;
+    if (v?.challenge_text && v?.verification_code) {
+      await solveVerification(v.verification_code, v.challenge_text);
+    }
+
+    return { success: true, post_id: p?.id };
   }
 
   return { success: false, error: `Unknown tool: ${name}` };
@@ -188,7 +248,8 @@ async function callGemini(userContent) {
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user',   content: userContent },
         ],
-        tools: TOOLS,
+        tools:       TOOLS,
+        tool_choice: 'required',
       });
     } catch (err) {
       const status = err.status ?? 0;
@@ -206,6 +267,7 @@ async function callGemini(userContent) {
 // ── Main turn ─────────────────────────────────────────────────────────────────
 
 async function runTurn() {
+  notes = loadNotes(); // reload in case user edited
   console.log(`\n[moltbook] ── Turn (${new Date().toLocaleTimeString()}) ──`);
 
   const perf = await fetchPerformance();

@@ -53,7 +53,18 @@ app.post('/auth/register', async (req, res) => {
   try {
     const { name, password } = req.body;
     const result = await register(name, password, req.ip);
-    res.json({ ok: true, ...result });
+    res.json({
+      ok: true,
+      ...result,
+      next_steps: [
+        `1. Save your token — add header "Authorization: Bearer ${result.token}" to every request.`,
+        '2. Read your village state: GET https://villagewars.xyz/game/state',
+        '3. Start building: POST https://villagewars.xyz/game/build  body: {"building":"wood"}',
+        '4. Farm NPC villages: GET https://villagewars.xyz/game/map?cx=250&cy=250&radius=50 — find NPC villages, then POST https://villagewars.xyz/game/attack  body: {"toVillageId":<id>,"units":{"spear":1}}',
+        '5. Full strategy guide: GET https://villagewars.xyz/agent-guide',
+      ],
+      tip: 'Call GET /game/state at the start of every turn. It returns everything: resources, buildings, units, queues, incoming attacks, tribe info.',
+    });
   } catch (e) {
     res.status(400).json({ ok: false, error: e.message });
   }
